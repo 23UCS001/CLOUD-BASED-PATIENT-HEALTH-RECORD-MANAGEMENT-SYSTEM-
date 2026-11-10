@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareNest · Dashboard</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark small">✚</span><span>CareNest<small>HEALTH RECORDS</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <a class="nav-item active" href="{{ url_for('dashboard') }}"><span>▦</span> Overview</a>
+    <a class="nav-item" href="#records"><span>♙</span> Patient records</a>
+    <a class="nav-item" href="#insights"><span>⌁</span> Data insights</a>
+    <a class="nav-item" href="#assistant"><span>✳</span> Help assistant</a>
+    <div class="sidebar-bottom"><div class="secure-dot"></div><div><strong>Demo workspace</strong><small>Local database connected</small></div></div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar"><div><p class="eyebrow">YOUR WORKSPACE / OVERVIEW</p><h1>Good day, {{ username|title }} <span class="wave">✦</span></h1><p class="muted">A calmer, clearer way to keep patient information organized.</p></div><div class="user-chip"><span class="avatar">{{ username[0]|upper }}</span><span><strong>{{ username|title }}</strong><small>{{ role|title }}</small></span><a href="{{ url_for('logout') }}" title="Sign out">↗</a></div></header>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+    <section class="stats-grid">
+      <article class="stat-card"><div class="stat-top"><span>Total patient records</span><span class="stat-icon blue">♙</span></div><strong class="stat-number">{{ total }}</strong><small>Records stored in this demo</small></article>
+      <article class="stat-card"><div class="stat-top"><span>Conditions recorded</span><span class="stat-icon green">♡</span></div><strong class="stat-number">{{ conditions|length }}</strong><small>Different condition labels</small></article>
+      <article class="stat-card"><div class="stat-top"><span>Signed in as</span><span class="stat-icon purple">✓</span></div><strong class="stat-number small-number">{{ role|title }}</strong><small>Role-based access enabled</small></article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel records-panel" id="records">
+        <div class="panel-heading"><div><p class="eyebrow">PATIENT DIRECTORY</p><h2>Patient records</h2><p class="muted">Find a record or add a new one.</p></div><span class="count-pill">{{ patients|length }} shown</span></div>
+        <form method="get" action="{{ url_for('dashboard') }}" class="search-form"><span>⌕</span><input name="q" value="{{ q }}" placeholder="Search name, patient ID, condition…"><button type="submit">Search</button>{% if q %}<a class="clear-link" href="{{ url_for('dashboard') }}">Clear</a>{% endif %}</form>
+        <div class="table-wrap"><table><thead><tr><th>PATIENT</th><th>AGE</th><th>CONDITION</th><th>ADDED</th>{% if role == 'admin' %}<th></th>{% endif %}</tr></thead><tbody>
+        {% for p in patients %}
+          <tr><td><div class="patient-cell"><span class="patient-avatar avatar-{{ loop.index0 % 4 }}">{{ p.full_name[0]|upper }}</span><div><strong>{{ p.full_name }}</strong><small>{{ p.patient_code }} · {{ p.gender }}</small></div></div></td><td>{{ p.age }}</td><td><span class="condition-tag">{{ p.condition_name }}</span></td><td>{{ p.created_at }}</td>
+          {% if role == 'admin' %}<td><form method="post" action="{{ url_for('delete_patient', patient_id=p.id) }}" onsubmit="return confirm('Delete this demo record?')"><button class="icon-btn" title="Delete record" type="submit">×</button></form></td>{% endif %}</tr>
+        {% else %}<tr><td colspan="5" class="empty">No records match your search. Try another name or add a patient.</td></tr>{% endfor %}
+        </tbody></table></div>
+      </article>
+      <article class="panel add-panel">
+        <div class="panel-heading"><div><p class="eyebrow">QUICK ACTION</p><h2>Add a patient</h2><p class="muted">Only the essentials to get started.</p></div><span class="plus-icon">＋</span></div>
+        <form method="post" action="{{ url_for('add_patient') }}" class="patient-form">
+          <label>Patient ID *<input name="patient_code" placeholder="e.g. P1004" required></label>
+          <label>Full name *<input name="full_name" placeholder="Patient's name" required></label>
+          <div class="form-row"><label>Age *<input name="age" type="number" min="0" max="120" placeholder="Age" required></label><label>Gender *<select name="gender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option><option>Prefer not to say</option></select></label></div>
+          <label>Recorded condition *<select name="condition_name" required><option value="">Choose condition</option><option>Diabetes</option><option>Hypertension</option><option>Asthma</option><option>Cardiovascular</option><option>Other</option></select></label>
+          <label>Phone <input name="phone" placeholder="Optional contact number"></label>
+          <label>Care notes <textarea name="notes" rows="2" placeholder="A short note (optional)"></textarea></label>
+          <button class="primary-btn full" type="submit">Save patient <span>→</span></button>
+        </form>
+      </article>
+    </section>
+
+    <section class="bottom-grid">
+      <article class="panel" id="insights"><div class="panel-heading"><div><p class="eyebrow">MODULE 2 · DATA & ML</p><h2>Data insights</h2></div><span class="stat-icon green">⌁</span></div>
+        <p class="insight-text">{{ insight }}</p><p class="small-note">This is a simple descriptive summary of the stored demo data, not a clinical prediction or diagnosis.</p>
+        <div class="condition-list">{% for c in conditions %}<div class="condition-row"><span>{{ c.condition_name }}</span><div class="bar-track"><div class="bar-fill" style="width: {{ (c.count / total * 100) if total else 0 }}%"></div></div><strong>{{ c.count }}</strong></div>{% else %}<p class="muted">Add a record to see insights.</p>{% endfor %}</div>
+      </article>
+      <article class="panel assistant-panel" id="assistant"><div class="panel-heading"><div><p class="eyebrow">MODULE 3 · GENAI / RAG DEMO</p><h2>Help assistant</h2><p class="muted">Ask how to use the website.</p></div><span class="assistant-mark">✳</span></div>
+        <div class="chat-window" id="chat-window"><div class="chat-bubble bot">Hi! I can help with using CareNest, record searches, data insights, and demo security. What would you like to know?</div></div>
+        <form id="assistant-form" class="chat-form"><input id="question" name="question" placeholder="Ask a quick question…" autocomplete="off" required><button type="submit" aria-label="Send question">➤</button></form>
+        <p class="small-note">Uses local help notes; no external AI service is required.</p>
+      </article>
+    </section>
+    <section class="panel audit-panel"><div class="panel-heading"><div><p class="eyebrow">MODULE 4 · SECURITY & GOVERNANCE</p><h2>Recent activity</h2><p class="muted">A small audit trail of actions in this demo.</p></div><span class="stat-icon purple">⌑</span></div>
+      <div class="audit-list">{% for log in logs %}<div class="audit-row"><span class="audit-dot"></span><div><strong>{{ log.action.replace('_', ' ')|title }}</strong><small>{{ log.username }} · {{ log.detail }}</small></div><time>{{ log.created_at }}</time></div>{% else %}<p class="muted">Activity will appear here as you use the site.</p>{% endfor %}</div>
+    </section>
+    <footer><span>CareNest · Student project demo</span><span>Module 1: Flask routes & API-ready design · <a href="{{ url_for('health') }}" target="_blank">Service health check ↗</a></span></footer>
+  </main>
+</div>
+<script>
+const form = document.getElementById('assistant-form');
+const chat = document.getElementById('chat-window');
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const input = document.getElementById('question');
+  const question = input.value.trim();
+  if (!question) return;
+  const userBubble = document.createElement('div');
+  userBubble.className = 'chat-bubble user';
+  userBubble.textContent = question;
+  chat.appendChild(userBubble);
+  input.value = '';
+  const waiting = document.createElement('div');
+  waiting.className = 'chat-bubble bot';
+  waiting.textContent = 'Let me check the help notes…';
+  chat.appendChild(waiting);
+  chat.scrollTop = chat.scrollHeight;
+  try {
+    const response = await fetch('{{ url_for("assistant") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({question})
+    });
+    const data = await response.json();
+    waiting.textContent = data.answer;
+  } catch (error) {
+    waiting.textContent = 'Sorry, I could not connect to the local help service. Please try again.';
+  }
+  chat.scrollTop = chat.scrollHeight;
+});
+</script>
+</body></html>

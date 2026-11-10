@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CareNest · Sign in</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+  <main class="login-wrap">
+    <section class="login-card">
+      <div class="brand-mark">✚</div>
+      <p class="eyebrow">CARENEST HEALTH</p>
+      <h1>Care starts with<br><span>clear records.</span></h1>
+      <p class="muted">A simple, secure place to organize patient information.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+      {% endwith %}
+      <form method="post" class="login-form">
+        <label>Username<input name="username" required autocomplete="username" placeholder="Enter username"></label>
+        <label>Password<input name="password" type="password" required autocomplete="current-password" placeholder="Enter password"></label>
+        <button class="primary-btn full" type="submit">Sign in <span>→</span></button>
+      </form>
+      <div class="demo-note"><strong>Demo login</strong><br>Username: <code>admin</code> &nbsp; Password: <code>Health@123</code></div>
+      <p class="tiny muted">Student demo only · Do not enter real patient information.</p>
+    </section>
+    <aside class="login-art">
+      <div class="art-orb orb-one"></div><div class="art-orb orb-two"></div>
+      <div class="art-copy"><span class="pill">HEALTH RECORDS, MADE SIMPLE</span><h2>Less paperwork.<br>More time to care.</h2><p>Keep essential information organized, find records quickly, and understand your dataset at a glance.</p>
+      <div class="art-stat"><span class="stat-icon">♡</span><div><strong>One clear view</strong><small>Records · Insights · Helpful answers</small></div></div></div>
+    </aside>
+  </main>
+</body>
+</html>
